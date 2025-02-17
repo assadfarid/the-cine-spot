@@ -1,38 +1,74 @@
-// src/components/Home.js
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import MovieCard from "../components/MovieCard";
+import { useState, useEffect } from "react";
+import { searchMovies, getPopularMovies } from "../services/api";
+import "../css/Home.css";
 
 function Home() {
+  const [searchQuery, setSearchQuery] = useState("");
   const [movies, setMovies] = useState([]);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://yts.mx/api/v2/list_movies.json?limit=10")
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setMovies(data.data.movies);
-        }
-      })
-      .catch((error) => console.error("Error fetching movie list:", error))
-      .finally(() => setLoading(false));
+    const loadPopularMovies = async () => {
+      try {
+        const popularMovies = await getPopularMovies();
+        setMovies(popularMovies);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to load movies...");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPopularMovies();
   }, []);
 
-  if (loading) return <p>Loading movies...</p>;
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return
+    if (loading) return
+
+    setLoading(true)
+    try {
+        const searchResults = await searchMovies(searchQuery)
+        setMovies(searchResults)
+        setError(null)
+    } catch (err) {
+        console.log(err)
+        setError("Failed to search movies...")
+    } finally {
+        setLoading(false)
+    }
+  };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <h1>YTS Movie List</h1>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "20px", maxWidth: "800px", margin: "auto" }}>
-        {movies.map((movie) => (
-          <div key={movie.id} style={{ textAlign: "center" }}>
-            <Link to={`/movie/${movie.id}`} style={{ textDecoration: "none", color: "black" }}>
-              <img src={movie.medium_cover_image} alt={movie.title} style={{ width: "100%", borderRadius: "10px" }} />
-              <p>{movie.title} ({movie.year})</p>
-            </Link>
-          </div>
-        ))}
-      </div>
+    <div className="home">
+      <form onSubmit={handleSearch} className="search-form">
+        <input
+          type="text"
+          placeholder="Search for movies..."
+          className="search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button type="submit" className="search-button">
+          Search
+        </button>
+      </form>
+
+        {error && <div className="error-message">{error}</div>}
+
+      {loading ? (
+        <div className="loading">Loading...</div>
+      ) : (
+        <div className="movies-grid">
+          {movies.map((movie) => (
+            <MovieCard movie={movie} key={movie.id} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

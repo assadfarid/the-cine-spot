@@ -1,40 +1,18 @@
-const BASE_URL = "https://yts.mx/api/v2";
+const API_KEY = "";
+const BASE_URL = "https://api.themoviedb.org/3";
 
-// Fetch Movies with Pagination
-export const getPopularMovies = async (page = 1) => {
-    try {
-        const response = await fetch(`${BASE_URL}/list_movies.json?limit=20&page=${page}`);
-        const data = await response.json();
-        return data.data.movies || [];
-    } catch (error) {
-        console.error("Error fetching popular movies:", error);
-        return [];
-    }
+export const getPopularMovies = async () => {
+  const response = await fetch(`${BASE_URL}/movie/popular?api_key=${'948d14724fbce2e31bfbbc41e0199188'}`);
+  const data = await response.json();
+  return data.results;
 };
 
-// Search Movies with Pagination
-export const searchMovies = async (query, page = 1) => {
-    try {
-        const response = await fetch(
-            `${BASE_URL}/list_movies.json?query_term=${encodeURIComponent(query)}&limit=20&page=${page}`
-        );
-        const data = await response.json();
-        return data.data.movies || [];
-    } catch (error) {
-        console.error("Error searching movies:", error);
-        return [];
-    }
-};
-
-
-// Fetch Movie Details by ID
-export const getMovieDetails = async (movieId) => {
-    try {
-        const response = await fetch(`https://yts.mx/api/v2/movie_details.json?movie_id=${movieId}&with_images=true&with_cast=true`);
-        const data = await response.json();
-        return data.data.movie;
-    } catch (error) {
-        console.error("Error fetching movie details:", error);
-        return null;
-    }
+export const searchMovies = async (query) => {
+  const response = await fetch(
+    `${BASE_URL}/search/movie?api_key=${'948d14724fbce2e31bfbbc41e0199188'}&query=${encodeURIComponent(
+      query
+    )}`
+  );
+  const data = await response.json();
+  return data.results;
 };
